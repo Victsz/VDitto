@@ -1,0 +1,119 @@
+{
+  "dib_to_png_24bit": {
+    "description": "Convert a valid 24-bit DIB to PNG",
+    "input": {
+      "dib_key": "dib_2x2_24bit"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "is_png": true,
+        "width": 2,
+        "height": 2
+      }
+    }
+  },
+  "dib_to_png_32bit": {
+    "description": "Convert a valid 32-bit DIB to PNG",
+    "input": {
+      "dib_key": "dib_2x2_32bit"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "is_png": true,
+        "width": 2,
+        "height": 2
+      }
+    }
+  },
+  "dib_to_png_1x1": {
+    "description": "Convert minimal 1x1 24-bit DIB",
+    "input": {
+      "dib_key": "dib_1x1_24bit"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "is_png": true,
+        "width": 1,
+        "height": 1
+      }
+    }
+  },
+  "dib_to_png_invalid_short": {
+    "description": "Too-short data should raise error",
+    "input": {
+      "dib_key": "dib_invalid_short"
+    },
+    "expected_output": {
+      "should_reject": true,
+      "reason": "DIB data too short"
+    }
+  },
+  "dib_to_png_invalid_header_size": {
+    "description": "Wrong biSize should raise error",
+    "input": {
+      "dib_key": "dib_invalid_headersize"
+    },
+    "expected_output": {
+      "should_reject": true,
+      "reason": "Invalid BITMAPINFOHEADER"
+    }
+  },
+  "dib_dimensions_normal": {
+    "description": "Read dimensions from valid DIB",
+    "input": {
+      "dib_key": "dib_2x2_24bit"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "width": 2,
+        "height": 2
+      }
+    }
+  },
+  "dib_dimensions_1x1": {
+    "description": "Read 1x1 dimensions",
+    "input": {
+      "dib_key": "dib_1x1_24bit"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "width": 1,
+        "height": 1
+      }
+    }
+  },
+  "dib_dimensions_too_short": {
+    "description": "Reading dimensions from too-short data should raise",
+    "input": {
+      "dib_key": "dib_invalid_short"
+    },
+    "expected_output": {
+      "should_reject": true,
+      "reason": "DIB data too short"
+    }
+  },
+  "dib_roundtrip_integrity": {
+    "description": "PNG converted back should have same dimensions",
+    "input": {
+      "dib_key": "dib_2x2_24bit"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "png_width_equals_dib": true,
+        "png_height_equals_dib": true
+      }
+    }
+  }
+}

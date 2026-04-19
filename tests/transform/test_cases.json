@@ -1,0 +1,191 @@
+{
+  "to_plain_normal": {
+    "description": "Strip control chars and normalize whitespace",
+    "input": {"func": "to_plain", "text": "  hello   world  \x00\x01  "},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "hello world"
+    }
+  },
+  "to_plain_tabs_and_newlines": {
+    "description": "Normalize tabs and newlines to single space",
+    "input": {"func": "to_plain", "text": "line1\t\tline2\n\nline3"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "line1 line2 line3"
+    }
+  },
+  "to_plain_empty": {
+    "description": "Empty string returns empty",
+    "input": {"func": "to_plain", "text": ""},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": ""
+    }
+  },
+  "to_upper_normal": {
+    "description": "Convert mixed case to upper",
+    "input": {"func": "to_upper", "text": "Hello World"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "HELLO WORLD"
+    }
+  },
+  "to_upper_unicode": {
+    "description": "Upper case with unicode chars",
+    "input": {"func": "to_upper", "text": "café résumé"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "CAFÉ RÉSUMÉ"
+    }
+  },
+  "to_upper_already_upper": {
+    "description": "Already upper case stays same",
+    "input": {"func": "to_upper", "text": "ALREADY"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "ALREADY"
+    }
+  },
+  "to_lower_normal": {
+    "description": "Convert to lower case",
+    "input": {"func": "to_lower", "text": "Hello WORLD"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "hello world"
+    }
+  },
+  "to_lower_unicode": {
+    "description": "Lower case with unicode",
+    "input": {"func": "to_lower", "text": "CAFÉ"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "café"
+    }
+  },
+  "to_capitalize_normal": {
+    "description": "Capitalize first letter of each word",
+    "input": {"func": "to_capitalize", "text": "hello world"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "Hello World"
+    }
+  },
+  "to_capitalize_mixed": {
+    "description": "Capitalize normalizes rest of word to lower",
+    "input": {"func": "to_capitalize", "text": "hELLO wORLD"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "Hello World"
+    }
+  },
+  "to_sentence_normal": {
+    "description": "Sentence case: capitalize after .!? and start",
+    "input": {"func": "to_sentence", "text": "hello. world! yes? no"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "Hello. World! Yes? No"
+    }
+  },
+  "to_sentence_single": {
+    "description": "Single sentence",
+    "input": {"func": "to_sentence", "text": "hello world"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "Hello world"
+    }
+  },
+  "to_invert_case_normal": {
+    "description": "Invert case of each character",
+    "input": {"func": "to_invert_case", "text": "Hello World"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "hELLO wORLD"
+    }
+  },
+  "to_invert_case_mixed": {
+    "description": "Invert case preserves non-alpha",
+    "input": {"func": "to_invert_case", "text": "ABC 123 xyz!"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "abc 123 XYZ!"
+    }
+  },
+  "trim_whitespace_normal": {
+    "description": "Trim and collapse whitespace",
+    "input": {"func": "trim_whitespace", "text": "  hello   world  "},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "hello world"
+    }
+  },
+  "trim_whitespace_newlines": {
+    "description": "Collapse newlines and spaces",
+    "input": {"func": "trim_whitespace", "text": "\n\n  hello \n world \t \n"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "hello world"
+    }
+  },
+  "remove_newlines_normal": {
+    "description": "Replace newlines with space",
+    "input": {"func": "remove_newlines", "text": "line1\nline2\r\nline3\rline4"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "line1 line2 line3 line4"
+    }
+  },
+  "remove_newlines_consecutive": {
+    "description": "Consecutive newlines become single space",
+    "input": {"func": "remove_newlines", "text": "a\n\n\nb"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": "a b"
+    }
+  },
+  "generate_guid_format": {
+    "description": "GUID should match standard format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "input": {"func": "generate_guid"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {"matches_pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"}
+    }
+  },
+  "generate_guid_unique": {
+    "description": "Two GUIDs should be different",
+    "input": {"func": "generate_guid_unique"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {"unique": true}
+    }
+  },
+  "current_datetime_format": {
+    "description": "Current datetime should match yyyymmdd-HH:MM:SS format",
+    "input": {"func": "current_datetime"},
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {"matches_pattern": "^\\d{8}-\\d{2}:\\d{2}:\\d{2}$"}
+    }
+  }
+}

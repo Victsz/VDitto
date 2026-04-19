@@ -1,0 +1,18 @@
+{
+  "description": "Ditto-compatible SQLite schema for test DB creation",
+  "schema": {
+    "Main": "CREATE TABLE Main(lID INTEGER PRIMARY KEY AUTOINCREMENT, lDate INTEGER, mText TEXT, lShortCut INTEGER, lDontAutoDelete INTEGER, CRC INTEGER, bIsGroup INTEGER, lParentID INTEGER, QuickPasteText TEXT, clipOrder REAL, clipGroupOrder REAL, globalShortCut INTEGER, lastPasteDate INTEGER, stickyClipOrder REAL, stickyClipGroupOrder REAL, MoveToGroupShortCut INTEGER, GlobalMoveToGroupShortCut INTEGER)",
+    "Data": "CREATE TABLE Data(lID INTEGER PRIMARY KEY AUTOINCREMENT, lParentID INTEGER, strClipBoardFormat TEXT, ooData BLOB)",
+    "MainDeletes": "CREATE TABLE MainDeletes(clipID INTEGER, modifiedDate)"
+  },
+  "indexes": [
+    "CREATE UNIQUE INDEX Main_ID on Main(lID ASC)",
+    "CREATE UNIQUE INDEX Data_ID on Data(lID ASC)",
+    "CREATE INDEX Main_ParentId on Main(lParentID DESC)",
+    "CREATE INDEX Main_IsGroup on Main(bIsGroup DESC)",
+    "CREATE INDEX Main_CRC on Main(CRC ASC)"
+  ],
+  "pragmas": {
+    "journal_mode": "WAL"
+  }
+}

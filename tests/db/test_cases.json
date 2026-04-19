@@ -1,0 +1,316 @@
+{
+  "save_clip_text_normal": {
+    "description": "Save a text clip, should create Main + Data records",
+    "input": {
+      "mtext": "Hello World",
+      "clip_type": "text",
+      "data": "SGVsbG8gV29ybGQ="
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "main_count": 1,
+        "data_count": 1,
+        "mtext": "Hello World",
+        "format": "CF_UNICODETEXT"
+      }
+    }
+  },
+  "save_clip_image_normal": {
+    "description": "Save an image clip, mText should be [image]",
+    "input": {
+      "mtext": "[image]",
+      "clip_type": "image",
+      "data": "AAAAAA=="
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "main_count": 1,
+        "data_count": 1,
+        "mtext": "[image]",
+        "format": "CF_DIB"
+      }
+    }
+  },
+  "save_clip_duplicate_crc": {
+    "description": "Save duplicate content (same CRC), should update date not create new",
+    "input": {
+      "mtext": "duplicate text",
+      "clip_type": "text",
+      "data": "ZHVwbGljYXRlIHRleHQ=",
+      "save_twice": true
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "main_count": 1,
+        "data_count": 1,
+        "mtext": "duplicate text"
+      }
+    }
+  },
+  "save_clip_empty_text": {
+    "description": "Save empty text should still create record",
+    "input": {
+      "mtext": "",
+      "clip_type": "text",
+      "data": ""
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "main_count": 1,
+        "data_count": 1,
+        "mtext": ""
+      }
+    }
+  },
+  "load_recent_normal": {
+    "description": "Load recent clips in desc order by lDate",
+    "input": {
+      "pre_insert": [
+        {"mtext": "first", "lDate": 100},
+        {"mtext": "second", "lDate": 200},
+        {"mtext": "third", "lDate": 300}
+      ],
+      "limit": 10
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 3,
+        "order": ["third", "second", "first"]
+      }
+    }
+  },
+  "load_recent_excludes_groups": {
+    "description": "load_recent should only return bIsGroup=0 clips",
+    "input": {
+      "pre_insert_clips": [{"mtext": "clip1", "lDate": 100}],
+      "pre_insert_groups": [{"mtext": "group1"}],
+      "limit": 10
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 1,
+        "order": ["clip1"]
+      }
+    }
+  },
+  "load_recent_limit": {
+    "description": "load_recent with limit=2 should return only 2",
+    "input": {
+      "pre_insert": [
+        {"mtext": "a", "lDate": 100},
+        {"mtext": "b", "lDate": 200},
+        {"mtext": "c", "lDate": 300}
+      ],
+      "limit": 2
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 2,
+        "order": ["c", "b"]
+      }
+    }
+  },
+  "load_clip_data_normal": {
+    "description": "Load all format data for a clip with multiple formats",
+    "input": {
+      "pre_insert": {
+        "mtext": "multi-format",
+        "formats": [
+          {"strClipBoardFormat": "CF_UNICODETEXT", "ooData": "dGV4dA=="},
+          {"strClipBoardFormat": "CF_TEXT", "ooData": "dGV4dA=="}
+        ]
+      }
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 2,
+        "formats": ["CF_UNICODETEXT", "CF_TEXT"]
+      }
+    }
+  },
+  "load_clip_data_not_found": {
+    "description": "Load data for non-existent clip returns empty list",
+    "input": {
+      "lParentID": 99999
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 0
+      }
+    }
+  },
+  "search_like_match": {
+    "description": "LIKE search with matching keyword",
+    "input": {
+      "pre_insert": [
+        {"mtext": "hello world", "lDate": 100},
+        {"mtext": "goodbye world", "lDate": 200}
+      ],
+      "keyword": "hello",
+      "mode": "like"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 1,
+        "first_mtext": "hello world"
+      }
+    }
+  },
+  "search_like_no_match": {
+    "description": "LIKE search with no matching keyword returns empty",
+    "input": {
+      "pre_insert": [
+        {"mtext": "hello", "lDate": 100}
+      ],
+      "keyword": "xyz",
+      "mode": "like"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 0
+      }
+    }
+  },
+  "search_regex_match": {
+    "description": "Regex search matching pattern",
+    "input": {
+      "pre_insert": [
+        {"mtext": "test123", "lDate": 100},
+        {"mtext": "no digits", "lDate": 200}
+      ],
+      "keyword": "\\d+",
+      "mode": "regex"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 1,
+        "first_mtext": "test123"
+      }
+    }
+  },
+  "search_empty_keyword": {
+    "description": "Empty keyword should return all clips (or empty)",
+    "input": {
+      "pre_insert": [
+        {"mtext": "hello", "lDate": 100}
+      ],
+      "keyword": "",
+      "mode": "like"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "count": 1
+      }
+    }
+  },
+  "create_group_root": {
+    "description": "Create a root-level group (lParentID=-1)",
+    "input": {
+      "name": "My Group",
+      "parent_id": -1
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "bIsGroup": 1,
+        "mtext": "My Group",
+        "lParentID": -1
+      }
+    }
+  },
+  "create_group_subgroup": {
+    "description": "Create a sub-group under an existing group",
+    "input": {
+      "parent_group_name": "Parent Group",
+      "name": "Child Group"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "bIsGroup": 1,
+        "mtext": "Child Group"
+      }
+    }
+  },
+  "delete_group_empty": {
+    "description": "Delete an empty group should succeed",
+    "input": {
+      "group_name": "ToDelete"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "deleted": true
+      }
+    }
+  },
+  "delete_group_non_empty": {
+    "description": "Delete a non-empty group should raise error",
+    "input": {
+      "group_name": "HasClips",
+      "add_clip_to_group": true
+    },
+    "expected_output": {
+      "should_reject": true,
+      "reason": "Group has children"
+    }
+  },
+  "move_to_group_normal": {
+    "description": "Move a clip to a group",
+    "input": {
+      "clip_mtext": "move me",
+      "group_name": "Target Group"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "lParentID_changed": true
+      }
+    }
+  },
+  "move_to_group_root": {
+    "description": "Move a clip to root (lParentID=-1)",
+    "input": {
+      "clip_mtext": "unroot me",
+      "group_name": "TempGroup",
+      "move_to_root": true
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "lParentID": -1
+      }
+    }
+  }
+}

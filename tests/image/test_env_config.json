@@ -1,0 +1,34 @@
+{
+  "description": "Synthetic DIB test data constructed in test.py using struct.pack",
+  "dib_fixtures": {
+    "dib_2x2_24bit": {
+      "width": 2,
+      "height": 2,
+      "bit_count": 24,
+      "compression": 0,
+      "note": "2x2 24-bit bottom-up DIB, 4-byte row aligned"
+    },
+    "dib_2x2_32bit": {
+      "width": 2,
+      "height": 2,
+      "bit_count": 32,
+      "compression": 0,
+      "note": "2x2 32-bit bottom-up DIB"
+    },
+    "dib_1x1_24bit": {
+      "width": 1,
+      "height": 1,
+      "bit_count": 24,
+      "compression": 0,
+      "note": "Minimal 1x1 24-bit DIB"
+    },
+    "dib_invalid_short": {
+      "size": 10,
+      "note": "Too short for BITMAPINFOHEADER"
+    },
+    "dib_invalid_headersize": {
+      "biSize": 99,
+      "note": "biSize != 40"
+    }
+  }
+}

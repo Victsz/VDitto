@@ -1,0 +1,15 @@
+[project]
+name = "vditto"
+version = "0.1.0"
+description = "Lightweight Ditto clipboard manager clone"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pillow>=12.2.0",
+    "pynput>=1.8.1",
+    "pyside6>=6.11.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
