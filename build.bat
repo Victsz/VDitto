@@ -70,10 +70,13 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-REM === Deploy to Downloads ===
+REM === Deploy to Downloads (only overwrite exe + _internal) ===
 echo [3/3] Deploying to %DEST%...
-if exist "%DEST%" rmdir /s /q "%DEST%"
-xcopy /E /I /Q "dist\VDitto" "%DEST%"
+mkdir "%DEST%" 2>nul
+copy /Y "dist\VDitto\VDitto.exe" "%DEST%\" >nul
+if exist "dist\VDitto\_internal" (
+    xcopy /E /Y /Q "dist\VDitto\_internal" "%DEST%\_internal\" >nul
+)
 
 REM === Create launcher ===
 echo @echo off > "%DEST%\run-vditto.bat"

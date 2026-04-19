@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import logging.handlers
 import os
 import signal
 import sys
@@ -13,6 +14,7 @@ from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from vditto import clipboard, config, db, hotkey, monitor
 from vditto.main_window import ClipWindow
+from vditto.macro_save import detect_macro, save_markdown, resolve_save_dir
 
 _listener = None
 _window = None
@@ -73,20 +75,72 @@ def _on_clip(clip_type: str, data: bytes, preview: str) -> None:
     """Handle clipboard change - save to database."""
     if _window is None:
         return
+
+    # F7: Macro auto-save (independent from DB)
+    if clip_type == "text":
+        try:
+            name, clean_text = detect_macro(preview)
+            if name is not None or clean_text != preview:
+                # Macro was detected and removed
+                if not clean_text.strip():
+                    logging.debug("Macro content empty after strip, skipping save")
+                    return
+                save_dir = resolve_save_dir()
+                saved_path = save_markdown(clean_text, name, save_dir)
+                if _tray is not None:
+                    _tray.showMessage(
+                        "VDitto",
+                        f"已保存: {saved_path.name}",
+                        QSystemTrayIcon.MessageIcon.Information,
+                        2000,
+                    )
+                logging.info(f"Macro save: {saved_path}")
+        except Exception:
+            logging.exception("Macro save failed")
+
+    # F1: Save to DB (always runs, independent of macro save)
     conn = _window.conn
     mtext = clipboard.make_preview_text(preview) if clip_type == "text" else preview
     lid = db.save_clip(conn, mtext, clip_type, data)
     logging.debug(f"Clip saved: id={lid}, type={clip_type}")
 
 
+def _setup_logging() -> None:
+    """Configure root logger with rotating file handler."""
+    if getattr(sys, "frozen", False):
+        log_dir = Path(sys.executable).parent / "logs"
+    else:
+        log_dir = Path(__file__).parent.parent / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    fmt = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    fh = logging.handlers.RotatingFileHandler(
+        log_dir / "vditto.log",
+        maxBytes=5 * 1024 * 1024,  # 5 MB
+        backupCount=3,
+        encoding="utf-8",
+    )
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(fmt)
+    root.addHandler(fh)
+
+
 def run(db_path: Path | None = None) -> int:
     global _listener, _window, _app, _tray
 
+    _setup_logging()
+
+    # Ensure config.json exists; persist CLI db_path if provided
+    config.ensure_config(str(db_path) if db_path else "")
+
     db_path = _resolve_db_path(db_path)
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    )
     logging.info(f"VDitto starting, db={db_path}")
 
     if not db_path.exists():

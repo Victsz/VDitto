@@ -211,6 +211,65 @@ class TestDB(unittest.TestCase):
         results = search_clips(self.conn, "", "like")
         self.assertEqual(len(results), 1)
 
+    # ---- search_clips: ordering ----
+
+    def test_search_like_ordered_by_date_desc(self):
+        """LIKE search results should be ordered by lDate DESC (newest first)."""
+        insert_test_clip(self.conn, "hello alpha", 100)
+        insert_test_clip(self.conn, "hello gamma", 300)
+        insert_test_clip(self.conn, "hello beta", 200)
+
+        results = search_clips(self.conn, "hello", "like")
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0]["mText"], "hello gamma")  # lDate=300
+        self.assertEqual(results[1]["mText"], "hello beta")   # lDate=200
+        self.assertEqual(results[2]["mText"], "hello alpha")   # lDate=100
+
+    def test_search_like_limit(self):
+        """LIKE search should respect limit parameter."""
+        for i in range(5):
+            insert_test_clip(self.conn, f"hello {i}", 100 + i)
+
+        results = search_clips(self.conn, "hello", "like", limit=3)
+        self.assertEqual(len(results), 3)
+        # Should be the 3 newest
+        self.assertEqual(results[0]["mText"], "hello 4")
+        self.assertEqual(results[1]["mText"], "hello 3")
+        self.assertEqual(results[2]["mText"], "hello 2")
+
+    def test_search_regex_ordered_by_date_desc(self):
+        """Regex search results should be ordered by lDate DESC."""
+        insert_test_clip(self.conn, "test123", 100)
+        insert_test_clip(self.conn, "abc456xyz", 300)
+        insert_test_clip(self.conn, "no digits", 200)
+
+        results = search_clips(self.conn, r"\d+", "regex")
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0]["mText"], "abc456xyz")  # lDate=300
+        self.assertEqual(results[1]["mText"], "test123")     # lDate=100
+
+    def test_search_regex_limit(self):
+        """Regex search should respect limit parameter."""
+        for i in range(5):
+            insert_test_clip(self.conn, f"item{i}", 100 + i)
+
+        results = search_clips(self.conn, r"item\d", "regex", limit=2)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0]["mText"], "item4")  # newest
+        self.assertEqual(results[1]["mText"], "item3")
+
+    def test_search_empty_keyword_ordered_by_date_desc(self):
+        """Empty keyword search should also be ordered by lDate DESC."""
+        insert_test_clip(self.conn, "first", 100)
+        insert_test_clip(self.conn, "third", 300)
+        insert_test_clip(self.conn, "second", 200)
+
+        results = search_clips(self.conn, "", "like")
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0]["mText"], "third")
+        self.assertEqual(results[1]["mText"], "second")
+        self.assertEqual(results[2]["mText"], "first")
+
     # ---- create_group ----
 
     def test_create_group_root(self):

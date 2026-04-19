@@ -1,0 +1,17 @@
+{
+  "description": "Environment config for macro_save tests. Uses tempfile for isolation.",
+  "temp_dirs": {
+    "temp_dir": {
+      "description": "Base temp directory for normal save tests",
+      "auto_create": true,
+      "auto_cleanup": true
+    },
+    "nested_temp_dir": {
+      "description": "Nested path that should NOT exist initially (tests auto-create)",
+      "base": "temp_dir",
+      "subpath": "nested/sub/dir",
+      "auto_create": false,
+      "auto_cleanup": true
+    }
+  }
+}

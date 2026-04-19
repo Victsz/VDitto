@@ -4,6 +4,7 @@ Compatible with Ditto DB schema (Main + Data tables).
 """
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3
 import time
@@ -114,40 +115,57 @@ def search_clips(
     conn: sqlite3.Connection,
     keyword: str,
     mode: Literal["like", "regex", "fulltext"] = "like",
+    limit: int = 20,
 ) -> list[dict]:
-    """Search clips by keyword."""
+    """Search clips by keyword, ordered by lDate DESC (newest first).
+
+    Args:
+        conn: Database connection
+        keyword: Search keyword (empty = return all)
+        mode: Search mode - "like" (SQL LIKE) or "regex" (Python regex)
+        limit: Maximum number of results to return
+
+    Returns:
+        List of clip dicts ordered by lDate DESC
+    """
     if mode == "like":
         if keyword == "":
-            # Empty keyword returns all clips
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
                 "SELECT lID, mText, lDate, bIsGroup, lParentID FROM Main "
-                "WHERE bIsGroup = 0",
+                "WHERE bIsGroup = 0 "
+                "ORDER BY lDate DESC LIMIT ?",
+                (limit,),
             ).fetchall()
         else:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
                 "SELECT lID, mText, lDate, bIsGroup, lParentID FROM Main "
-                "WHERE bIsGroup = 0 AND mText LIKE ?",
-                (f"%{keyword}%",),
+                "WHERE bIsGroup = 0 AND mText LIKE ? "
+                "ORDER BY lDate DESC LIMIT ?",
+                (f"%{keyword}%", limit),
             ).fetchall()
     elif mode == "regex":
-        # For regex, fetch all clips and filter with Python regex
-        # (no SQL pre-filter since regex patterns don't work with LIKE)
+        # Fetch candidates ordered by date, filter with Python regex
+        pool_size = max(limit * 10, 200)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
             "SELECT lID, mText, lDate, bIsGroup, lParentID FROM Main "
-            "WHERE bIsGroup = 0",
+            "WHERE bIsGroup = 0 "
+            "ORDER BY lDate DESC LIMIT ?",
+            (pool_size,),
         ).fetchall()
 
         # Apply Python regex filtering
         pattern = re.compile(keyword)
-        rows = [row for row in rows if pattern.search(row["mText"])]
+        rows = [row for row in rows if pattern.search(row["mText"])][:limit]
     else:
-        # fulltext mode - not implemented in tests, return empty
+        # fulltext mode - not implemented, return empty
         return []
 
-    return [dict(row) for row in rows]
+    result = [dict(row) for row in rows]
+    logging.debug(f"search_clips: mode={mode}, keyword='{keyword}', limit={limit}, found={len(result)}")
+    return result
 
 
 def create_group(

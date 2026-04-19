@@ -9,6 +9,7 @@ from typing import Any
 
 _DEFAULTS: dict[str, Any] = {
     "db_path": "",
+    "save_dir": "",
 }
 
 
@@ -39,3 +40,24 @@ def save_config(cfg: dict[str, Any]) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
     logging.info(f"Config saved to {path}")
+
+
+def ensure_config(db_path: str = "") -> None:
+    """Create config.json with defaults if missing. Optionally persist db_path."""
+    path = config_path()
+    cfg = dict(_DEFAULTS)
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+            cfg.update(saved)
+        except (json.JSONDecodeError, OSError) as e:
+            logging.warning(f"Failed to load config: {e}")
+
+    needs_save = not path.exists()
+    if db_path:
+        cfg["db_path"] = db_path
+        needs_save = True
+
+    if needs_save:
+        save_config(cfg)

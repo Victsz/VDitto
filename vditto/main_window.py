@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer, QMimeData, QEvent
-from PySide6.QtGui import QCursor, QKeyEvent, QImage
+from PySide6.QtGui import QCursor, QKeyEvent, QImage, QColor
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -18,12 +18,58 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMenu,
     QPushButton,
+    QStyledItemDelegate,
     QVBoxLayout,
     QWidget,
 )
 
 from vditto import config, db, paste
 from vditto.clipboard import make_preview_text, CLIPBOARD_IGNORE_FORMAT
+
+
+class HighlightDelegate(QStyledItemDelegate):
+    """Delegate that highlights matching keyword with a yellow overlay."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._keyword = ""
+
+    def set_keyword(self, keyword: str) -> None:
+        self._keyword = keyword
+
+    def paint(self, painter, option, index):
+        # Always let default implementation draw the full item first
+        super().paint(painter, option, index)
+
+        if not self._keyword:
+            return
+
+        text = index.data(Qt.ItemDataRole.DisplayRole) or ""
+        if not text:
+            return
+
+        # Overlay semi-transparent yellow rectangles on matched regions
+        painter.save()
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(255, 235, 59, 120))  # #FFEB3B with alpha
+
+        fm = painter.fontMetrics()
+        x_base = option.rect.x() + 3
+
+        keyword_lower = self._keyword.lower()
+        text_lower = text.lower()
+        pos = 0
+        while pos < len(text):
+            match_pos = text_lower.find(keyword_lower, pos)
+            if match_pos == -1:
+                break
+            x_start = x_base + fm.horizontalAdvance(text[:match_pos])
+            match_w = fm.horizontalAdvance(text[match_pos:match_pos + len(self._keyword)])
+            painter.drawRect(int(x_start), option.rect.y() + 2, int(match_w), option.rect.height() - 4)
+            pos = match_pos + len(self._keyword)
+
+        painter.restore()
+
 
 
 class ClipWindow(QMainWindow):
@@ -71,6 +117,8 @@ class ClipWindow(QMainWindow):
         self.clip_list = QListWidget()
         self.clip_list.itemDoubleClicked.connect(self._on_paste_selected)
         self.clip_list.keyPressEvent = self._list_key_press_event
+        self._highlight_delegate = HighlightDelegate(self.clip_list)
+        self.clip_list.setItemDelegate(self._highlight_delegate)
 
         self.status_label = QLabel("Ready")
         self.status_label.setCursor(Qt.CursorShape.OpenHandCursor)
@@ -110,6 +158,10 @@ class ClipWindow(QMainWindow):
             clips = db.search_clips(self.conn, keyword, mode)
         else:
             clips = db.load_recent(self.conn)
+
+        self._clips = clips
+        self.clip_list.clear()
+        self._highlight_delegate.set_keyword(keyword)
 
         self._clips = clips
         self.clip_list.clear()

@@ -1,0 +1,244 @@
+{
+  "detect_macro_01_save_no_name": {
+    "description": "{{SAVE}} at start of text → filename=None, macro line removed",
+    "input": {
+      "text": "{{SAVE}}\nHello world\nThis is content"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": null,
+        "clean_text": "Hello world\nThis is content"
+      }
+    }
+  },
+  "detect_macro_02_save_with_name": {
+    "description": "{{SAVE:meeting-notes}} → filename='meeting-notes'",
+    "input": {
+      "text": "{{SAVE:meeting-notes}}\nMeeting content here"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": "meeting-notes",
+        "clean_text": "Meeting content here"
+      }
+    }
+  },
+  "detect_macro_03_no_macro": {
+    "description": "No macro in text → (None, original text)",
+    "input": {
+      "text": "Just some normal text"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": null,
+        "clean_text": "Just some normal text"
+      }
+    }
+  },
+  "detect_macro_04_empty_text": {
+    "description": "Empty text → (None, '')",
+    "input": {
+      "text": ""
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": null,
+        "clean_text": ""
+      }
+    }
+  },
+  "detect_macro_05_macro_in_middle": {
+    "description": "Macro in middle of text → detected, line removed",
+    "input": {
+      "text": "Header line\n{{SAVE:mid-notes}}\nFooter line"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": "mid-notes",
+        "clean_text": "Header line\nFooter line"
+      }
+    }
+  },
+  "detect_macro_06_macro_at_end": {
+    "description": "Macro at end of text → detected, trailing empty line cleaned",
+    "input": {
+      "text": "Content line\n{{SAVE}}"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": null,
+        "clean_text": "Content line"
+      }
+    }
+  },
+  "detect_macro_07_trim_spaces_in_name": {
+    "description": "{{SAVE:  spaced  }} → name trimmed to 'spaced'",
+    "input": {
+      "text": "{{SAVE:  spaced  }}\nContent"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": "spaced",
+        "clean_text": "Content"
+      }
+    }
+  },
+  "detect_macro_08_lowercase_not_detected": {
+    "description": "{{save}} lowercase → not detected, text unchanged",
+    "input": {
+      "text": "{{save}}\nContent"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": null,
+        "clean_text": "{{save}}\nContent"
+      }
+    }
+  },
+  "detect_macro_09_multiple_macros": {
+    "description": "Two macros → only first detected and removed",
+    "input": {
+      "text": "{{SAVE:first}}\nMiddle\n{{SAVE:second}}"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": "first",
+        "clean_text": "Middle\n{{SAVE:second}}"
+      }
+    }
+  },
+  "detect_macro_10_unicode_name": {
+    "description": "{{SAVE:会议记录}} → unicode filename supported",
+    "input": {
+      "text": "{{SAVE:会议记录}}\n会议内容"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": "会议记录",
+        "clean_text": "会议内容"
+      }
+    }
+  },
+  "detect_macro_11_macro_inline": {
+    "description": "Macro inline with other text on same line → detected, that line removed",
+    "input": {
+      "text": "Before {{SAVE:inline-test}} After\nNext line"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "name": "inline-test",
+        "clean_text": "Next line"
+      }
+    }
+  },
+  "make_filename_01_auto": {
+    "description": "None → yyyymmdd-hhmmss.md format",
+    "input": {
+      "name": null
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "matches_pattern": "^\\d{8}-\\d{6}\\.md$"
+      }
+    }
+  },
+  "make_filename_02_custom": {
+    "description": "'notes' → 'notes.md'",
+    "input": {
+      "name": "notes"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "filename": "notes.md"
+      }
+    }
+  },
+  "make_filename_03_already_has_ext": {
+    "description": "'notes.md' → 'notes.md' (no double extension)",
+    "input": {
+      "name": "notes.md"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "filename": "notes.md"
+      }
+    }
+  },
+  "save_markdown_01_normal": {
+    "description": "Save text to new file in existing dir",
+    "input": {
+      "text": "Hello world",
+      "name": "test-note",
+      "save_dir_env": "temp_dir"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "file_content": "Hello world",
+        "filename": "test-note.md"
+      }
+    }
+  },
+  "save_markdown_02_create_dir": {
+    "description": "save_dir doesn't exist → auto-create and save",
+    "input": {
+      "text": "Auto-created dir content",
+      "name": "auto-dir-test",
+      "save_dir_env": "nested_temp_dir"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "file_content": "Auto-created dir content",
+        "filename": "auto-dir-test.md"
+      }
+    }
+  },
+  "save_markdown_03_overwrite": {
+    "description": "File already exists → overwrite with new content",
+    "input": {
+      "text": "Updated content",
+      "name": "overwrite-test",
+      "save_dir_env": "temp_dir",
+      "pre_existing_content": "Old content"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "file_content": "Updated content",
+        "filename": "overwrite-test.md"
+      }
+    }
+  }
+}
