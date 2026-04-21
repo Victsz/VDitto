@@ -1,6 +1,6 @@
 {
   "detect_macro_01_save_no_name": {
-    "description": "{{SAVE}} at start of text → filename=None, macro line removed",
+    "description": "{{SAVE}} at start of text → mode='A', filename=None, macro line removed",
     "input": {
       "text": "{{SAVE}}\nHello world\nThis is content"
     },
@@ -8,13 +8,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "A",
         "name": null,
         "clean_text": "Hello world\nThis is content"
       }
     }
   },
   "detect_macro_02_save_with_name": {
-    "description": "{{SAVE:meeting-notes}} → filename='meeting-notes'",
+    "description": "{{SAVE:meeting-notes}} → mode='A', filename='meeting-notes'",
     "input": {
       "text": "{{SAVE:meeting-notes}}\nMeeting content here"
     },
@@ -22,13 +23,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "A",
         "name": "meeting-notes",
         "clean_text": "Meeting content here"
       }
     }
   },
   "detect_macro_03_no_macro": {
-    "description": "No macro in text → (None, original text)",
+    "description": "No macro in text → (mode='O', None, original text)",
     "input": {
       "text": "Just some normal text"
     },
@@ -36,13 +38,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "O",
         "name": null,
         "clean_text": "Just some normal text"
       }
     }
   },
   "detect_macro_04_empty_text": {
-    "description": "Empty text → (None, '')",
+    "description": "Empty text → (mode='O', None, '')",
     "input": {
       "text": ""
     },
@@ -50,13 +53,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "O",
         "name": null,
         "clean_text": ""
       }
     }
   },
   "detect_macro_05_macro_in_middle": {
-    "description": "Macro in middle of text → detected, line removed",
+    "description": "Macro in middle of text → mode='A', detected, line removed",
     "input": {
       "text": "Header line\n{{SAVE:mid-notes}}\nFooter line"
     },
@@ -64,13 +68,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "A",
         "name": "mid-notes",
         "clean_text": "Header line\nFooter line"
       }
     }
   },
   "detect_macro_06_macro_at_end": {
-    "description": "Macro at end of text → detected, trailing empty line cleaned",
+    "description": "Macro at end of text → mode='A', detected, trailing empty line cleaned",
     "input": {
       "text": "Content line\n{{SAVE}}"
     },
@@ -78,13 +83,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "A",
         "name": null,
         "clean_text": "Content line"
       }
     }
   },
   "detect_macro_07_trim_spaces_in_name": {
-    "description": "{{SAVE:  spaced  }} → name trimmed to 'spaced'",
+    "description": "{{SAVE:  spaced  }} → mode='A', name trimmed to 'spaced'",
     "input": {
       "text": "{{SAVE:  spaced  }}\nContent"
     },
@@ -92,13 +98,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "A",
         "name": "spaced",
         "clean_text": "Content"
       }
     }
   },
   "detect_macro_08_lowercase_not_detected": {
-    "description": "{{save}} lowercase → not detected, text unchanged",
+    "description": "{{save}} lowercase → mode='O', not detected, text unchanged",
     "input": {
       "text": "{{save}}\nContent"
     },
@@ -106,13 +113,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "O",
         "name": null,
         "clean_text": "{{save}}\nContent"
       }
     }
   },
   "detect_macro_09_multiple_macros": {
-    "description": "Two macros → only first detected and removed",
+    "description": "Two macros → mode='A', only first detected and removed",
     "input": {
       "text": "{{SAVE:first}}\nMiddle\n{{SAVE:second}}"
     },
@@ -120,13 +128,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "A",
         "name": "first",
         "clean_text": "Middle\n{{SAVE:second}}"
       }
     }
   },
   "detect_macro_10_unicode_name": {
-    "description": "{{SAVE:会议记录}} → unicode filename supported",
+    "description": "{{SAVE:会议记录}} → mode='A', unicode filename supported",
     "input": {
       "text": "{{SAVE:会议记录}}\n会议内容"
     },
@@ -134,13 +143,14 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "A",
         "name": "会议记录",
         "clean_text": "会议内容"
       }
     }
   },
   "detect_macro_11_macro_inline": {
-    "description": "Macro inline with other text on same line → detected, that line removed",
+    "description": "Macro inline with other text on same line → mode='A', detected, that line removed",
     "input": {
       "text": "Before {{SAVE:inline-test}} After\nNext line"
     },
@@ -148,8 +158,84 @@
       "should_reject": false,
       "reason": "",
       "result": {
+        "mode": "A",
         "name": "inline-test",
         "clean_text": "Next line"
+      }
+    }
+  },
+  "detect_macro_12_append_mode": {
+    "description": "{{SAVE:notes|M:A}} → mode='A', name='notes'",
+    "input": {
+      "text": "{{SAVE:notes|M:A}}\nContent"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "mode": "A",
+        "name": "notes",
+        "clean_text": "Content"
+      }
+    }
+  },
+  "detect_macro_13_collection_mode": {
+    "description": "{{SAVE:notes|M:C}} → mode='C', name='notes'",
+    "input": {
+      "text": "{{SAVE:notes|M:C}}\nContent"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "mode": "C",
+        "name": "notes",
+        "clean_text": "Content"
+      }
+    }
+  },
+  "detect_macro_14_overwrite_mode_explicit": {
+    "description": "{{SAVE:notes|M:O}} → mode='O', name='notes'",
+    "input": {
+      "text": "{{SAVE:notes|M:O}}\nContent"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "mode": "O",
+        "name": "notes",
+        "clean_text": "Content"
+      }
+    }
+  },
+  "detect_macro_15_append_mode_no_name": {
+    "description": "{{SAVE|M:A}} → mode='A', name=null",
+    "input": {
+      "text": "{{SAVE|M:A}}\nContent"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "mode": "A",
+        "name": null,
+        "clean_text": "Content"
+      }
+    }
+  },
+  "detect_macro_16_collection_mode_no_name": {
+    "description": "{{SAVE|M:C}} → mode='C', name=null",
+    "input": {
+      "text": "{{SAVE|M:C}}\nContent"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "mode": "C",
+        "name": null,
+        "clean_text": "Content"
       }
     }
   },
@@ -197,7 +283,8 @@
     "input": {
       "text": "Hello world",
       "name": "test-note",
-      "save_dir_env": "temp_dir"
+      "save_dir_env": "temp_dir",
+      "mode": "O"
     },
     "expected_output": {
       "should_reject": false,
@@ -213,7 +300,8 @@
     "input": {
       "text": "Auto-created dir content",
       "name": "auto-dir-test",
-      "save_dir_env": "nested_temp_dir"
+      "save_dir_env": "nested_temp_dir",
+      "mode": "O"
     },
     "expected_output": {
       "should_reject": false,
@@ -230,6 +318,7 @@
       "text": "Updated content",
       "name": "overwrite-test",
       "save_dir_env": "temp_dir",
+      "mode": "O",
       "pre_existing_content": "Old content"
     },
     "expected_output": {
@@ -238,6 +327,149 @@
       "result": {
         "file_content": "Updated content",
         "filename": "overwrite-test.md"
+      }
+    }
+  },
+  "save_markdown_04_append_new": {
+    "description": "Append mode, file doesn't exist → create new file",
+    "input": {
+      "text": "First content",
+      "name": "append-test",
+      "save_dir_env": "temp_dir",
+      "mode": "A"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "file_content": "First content",
+        "filename": "append-test.md"
+      }
+    }
+  },
+  "save_markdown_05_append_existing": {
+    "description": "Append mode, file exists → append with separator",
+    "input": {
+      "text": "New content",
+      "name": "append-existing",
+      "save_dir_env": "temp_dir",
+      "mode": "A",
+      "pre_existing_content": "Old content"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "file_content": "Old content\n---\nNew content",
+        "filename": "append-existing.md"
+      }
+    }
+  },
+  "save_markdown_06_collection": {
+    "description": "Collection mode → create subdirectory with timestamped file",
+    "input": {
+      "text": "Collection content",
+      "name": "my-notes",
+      "save_dir_env": "temp_dir",
+      "mode": "C"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "parent_dirname": "my-notes",
+        "matches_pattern": "^\\d{8}-\\d{6}\\.md$",
+        "file_content": "Collection content"
+      }
+    }
+  },
+  "save_markdown_07_collection_unnamed": {
+    "description": "Collection mode without name → use 'unnamed' folder",
+    "input": {
+      "text": "Unnamed collection content",
+      "name": null,
+      "save_dir_env": "temp_dir",
+      "mode": "C"
+    },
+    "expected_output": {
+      "should_reject": false,
+      "reason": "",
+      "result": {
+        "parent_dirname": "unnamed",
+        "matches_pattern": "^\\d{8}-\\d{6}\\.md$",
+        "file_content": "Unnamed collection content"
+      }
+    }
+  },
+  "split_text_01_short": {
+    "description": "Text <= max_len → single chunk",
+    "input": {
+      "text": "Hello",
+      "max_len": 10
+    },
+    "expected_output": {
+      "result": {
+        "chunks": ["Hello"]
+      }
+    }
+  },
+  "split_text_02_at_boundary": {
+    "description": "Text exactly max_len → single chunk",
+    "input": {
+      "text": "1234567890",
+      "max_len": 10
+    },
+    "expected_output": {
+      "result": {
+        "chunks": ["1234567890"]
+      }
+    }
+  },
+  "split_text_03_split_at_newline": {
+    "description": "Text > max_len with newlines → split at newline boundary",
+    "input": {
+      "text": "aaa\nbbb\nccc",
+      "max_len": 8
+    },
+    "expected_output": {
+      "result": {
+        "chunks": ["aaa\nbbb\n", "ccc"]
+      }
+    }
+  },
+  "split_text_04_hard_cut_no_newline": {
+    "description": "Text > max_len without newlines → hard cut",
+    "input": {
+      "text": "abcdefghij",
+      "max_len": 5
+    },
+    "expected_output": {
+      "result": {
+        "chunks": ["abcde", "fghij"]
+      }
+    }
+  },
+  "split_text_05_multiple_splits": {
+    "description": "Long text → multiple chunks at newline boundaries",
+    "input": {
+      "text": "aaa\nbbb\nccc\nddd\neee",
+      "max_len": 8
+    },
+    "expected_output": {
+      "result": {
+        "chunk_count": 3
+      }
+    }
+  },
+  "split_text_06_empty": {
+    "description": "Empty text → single empty chunk",
+    "input": {
+      "text": "",
+      "max_len": 10
+    },
+    "expected_output": {
+      "result": {
+        "chunks": [""]
       }
     }
   }

@@ -37,6 +37,8 @@ def start_clipboard_monitor(app: QApplication, on_clip_callback: callable) -> QC
 
         if clip_type == "text":
             text = clipboard.text()
+            if len(text) > 100:
+                logging.debug(f"Clip text len={len(text)}, first100={text[:100]!r}")
             # Ditto stores CF_UNICODETEXT as UTF-16LE (wchar_t)
             on_clip_callback("text", text.encode("utf-16-le"), text)
 

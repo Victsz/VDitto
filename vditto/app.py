@@ -8,18 +8,19 @@ import signal
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from vditto import clipboard, config, db, hotkey, monitor
 from vditto.main_window import ClipWindow
-from vditto.macro_save import detect_macro, save_markdown, resolve_save_dir
+from vditto.macro_save import CHUNK_THRESHOLD, detect_macro, resolve_save_dir, save_markdown, split_text
 
 _listener = None
 _window = None
 _app = None
 _tray = None
+_last_macro_crc: int = 0
 
 
 class _Bridge(QObject):
@@ -71,22 +72,46 @@ def _on_toggle_window() -> None:
         _window.show_at_cursor()
 
 
+def _queue_chunks(clean_text: str, name: str | None) -> None:
+    """Split long text into chunks and write each to clipboard with 200ms delay."""
+    chunks = split_text(clean_text)
+    cb = QApplication.clipboard()
+    for i, chunk in enumerate(chunks):
+        macro = f"{{{{SAVE:{name}|M:A}}}}\n" if name else "{{SAVE|M:A}}\n"
+        macro_text = macro + chunk
+        QTimer.singleShot(200 * (i + 1), lambda t=macro_text: cb.setText(t))
+    logging.info(f"Queued {len(chunks)} chunks for macro save")
+
+
 def _on_clip(clip_type: str, data: bytes, preview: str) -> None:
     """Handle clipboard change - save to database."""
     if _window is None:
         return
 
+    # Deduplicate: skip duplicate clipboard events (CRC check first)
+    global _last_macro_crc
+    crc = clipboard.compute_clip_crc(data)
+    logging.debug(f"CRC check: crc={crc:#010x}, last={_last_macro_crc:#010x}, data_len={len(data)}")
+    if crc == _last_macro_crc:
+        logging.debug("Duplicate clip event, skipping")
+        return
+    _last_macro_crc = crc
+
     # F7: Macro auto-save (independent from DB)
     if clip_type == "text":
         try:
-            name, clean_text = detect_macro(preview)
-            if name is not None or clean_text != preview:
-                # Macro was detected and removed
+            mode, name, clean_text = detect_macro(preview)
+            if clean_text != preview:
+                # Macro was detected and removed (text changed)
                 if not clean_text.strip():
                     logging.debug("Macro content empty after strip, skipping save")
                     return
+                # Long content: split into chunks and re-queue to clipboard
+                if len(clean_text) > CHUNK_THRESHOLD:
+                    _queue_chunks(clean_text, name)
+                    return
                 save_dir = resolve_save_dir()
-                saved_path = save_markdown(clean_text, name, save_dir)
+                saved_path = save_markdown(clean_text, name, save_dir, mode)
                 if _tray is not None:
                     _tray.showMessage(
                         "VDitto",
